@@ -1,0 +1,42 @@
+name: iPhone-App bauen
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode anzeigen
+        run: xcodebuild -version
+      - name: Berechnungen und Erkennung testen
+        run: swift test
+      - name: XcodeGen installieren
+        run: brew install xcodegen
+      - name: Xcode-Projekt erzeugen
+        run: xcodegen generate
+      - name: Native iPhone-App kompilieren
+        run: >-
+          xcodebuild -project HFit.xcodeproj -scheme HFit
+          -configuration Release -sdk iphoneos -destination 'generic/platform=iOS'
+          -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+      - name: Unsigned IPA verpacken
+        run: |
+          mkdir -p build/ipa/Payload
+          cp -R build/Build/Products/Release-iphoneos/HFit.app build/ipa/Payload/
+          cd build/ipa
+          zip -qr ../HFit-unsigned.ipa Payload
+      - name: IPA zum Download bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: HFit-iPhone
+          path: build/HFit-unsigned.ipa
+          retention-days: 7
+          if-no-files-found: error
