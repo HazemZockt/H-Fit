@@ -74,6 +74,10 @@ struct ReviewView: View {
         notes = result.notes; self.completion = completion
     }
     var valid: Bool { !items.isEmpty && items.allSatisfy { $0.food != nil && $0.amount.isFinite && $0.amount > 0 && $0.amount <= 10000 } }
+    var total: Nutrients { items.reduce(Nutrients()) { sum, item in
+        guard item.amount.isFinite, item.amount > 0, item.amount <= 10000, let food = item.food else { return sum }
+        return sum + food.per100.scaled(item.amount / 100)
+    } }
     var body: some View {
         NavigationStack {
             Form {
@@ -92,17 +96,19 @@ struct ReviewView: View {
                                     TextField("Menge", value: $item.amount, format: .number).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
                                 }
                                 if item.estimated { Text("Portionsgröße geschätzt – bitte abwiegen oder anpassen.").font(.caption).foregroundStyle(.orange) }
-                                Text("≈ \(Int(food.per100.kcal * max(0, min(item.amount, 10000)) / 100)) kcal").foregroundStyle(.secondary)
+                                Text(item.amount.isFinite ? "≈ \(Int(food.per100.kcal * max(0, min(item.amount, 10000)) / 100)) kcal" : "Bitte Menge prüfen").foregroundStyle(.secondary)
                             } else { Text("Nicht eindeutig erkannt. Bitte ein Lebensmittel auswählen oder selbst ergänzen.").font(.subheadline).foregroundStyle(.orange) }
                             Button("Lebensmittel auswählen / ändern") { resolveID = item.id }.buttonStyle(.borderless)
                         }.padding(.vertical, 6)
                     }
                 }
                 Section {
+                    Text("Zusammen: \(Int(total.kcal.rounded())) kcal · \(Int(total.protein.rounded())) g Eiweiß").font(.headline)
+                    if !valid { Text("Die Summe enthält nur gültige, zugeordnete Mengen. Bitte offene Lebensmittel zuerst klären.").font(.caption).foregroundStyle(.orange) }
                     ForEach(notes, id: \.self) { Text($0).font(.footnote).foregroundStyle(.secondary) }
                     Text("Reis und Nudeln beziehen sich standardmäßig auf gekochtes Gewicht. Für Trockengewicht „Reis trocken“ oder „Nudeln trocken“ schreiben.").font(.footnote).foregroundStyle(.secondary)
                     Button("\(items.count) Einträge speichern") {
-                        let meals = items.compactMap { item in item.food.map { Meal(date: date, food: $0, amount: item.amount) } }
+                        let meals = items.compactMap { item in item.food.map { Meal(date: date, food: $0, amount: item.amount, estimated: item.estimated) } }
                         if store.update({ $0.meals.append(contentsOf: meals) }) { completion() }
                     }.disabled(!valid || date > Date())
                 }

@@ -1,0 +1,17 @@
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const C=require('../assets/core.js');
+const foods=require('../assets/catalog.js');
+const now=new Date(2026,9,5,15,0);
+test('German meal: units, time and nutritional total',()=>{const r=C.parse('Heute um 8 Uhr 60 g Haferflocken mit 200 ml Milch und eine Banane',foods,now);assert.equal(r.items.length,3);assert.deepEqual(r.items.map(x=>x.amount),[60,200,120]);assert.ok(r.items.every(x=>x.food));assert.equal(new Date(r.date).getHours(),8);assert.ok(Math.abs(C.totals(r.items).k-424)<.001);});
+test('Decimals, litres, number words and half portions',()=>{const r=C.parse('1,5 l Wasser, zwei Eier und eine halbe Banane',foods,now);assert.deepEqual(r.items.map(x=>x.amount),[1500,120,60]);});
+test('Yesterday and raw rice',()=>{const r=C.parse('Gestern um 19:30 Uhr 80g Reis trocken und 150g Hähnchen',foods,now);assert.equal(new Date(r.date).getDate(),4);assert.equal(new Date(r.date).getHours(),19);assert.equal(r.items[0].food.k,350);});
+test('Unknown and ambiguous meals never invent nutrition',()=>{assert.equal(C.parse('250g Zauberkuchen',foods,now).items[0].food,null);assert.equal(C.parse('200g Reis 150g Hähnchen',foods,now).items[0].food,null);});
+test('Specific aliases win over generic aliases',()=>{assert.equal(C.parse('330 ml Cola Zero',foods,now).items[0].food.k,0);assert.equal(C.parse('200 ml Hafermilch',foods,now).items[0].food.name,'Haferdrink');});
+test('Personal foods are recognized',()=>{const f={id:'own',name:'Mein Proteinriegel',aliases:[],k:350,p:30,c:25,f:12,portion:50,unit:'g'};assert.equal(C.parse('2 Mein Proteinriegel',[f,...foods],now).items[0].amount,100);});
+test('Day keys use local calendar; catalogue is valid',()=>{assert.equal(C.dayKey(now),'2026-10-05');assert.ok(foods.every(C.foodValid));assert.equal(new Set(foods.map(x=>x.id)).size,foods.length);});
+test('Import accepts real backups and rejects unsafe fields',()=>{const s=C.initial();s.meals.push({id:'1',food:foods[0],amount:60,date:now.toISOString()});assert.equal(C.validate(JSON.parse(JSON.stringify(s))),true);s.meals[0].amount=-1;assert.throws(()=>C.validate(s));s.meals[0].amount=60;s.meals.push(s.meals[0]);assert.throws(()=>C.validate(s));});
+test('Backups reject unsupported formats and pathological dates',()=>{const s=C.initial();s.format='ios';assert.throws(()=>C.validate(s));s.format='hfit-android-1';s.fastStart='9999-01-01T00:00:00Z';assert.throws(()=>C.validate(s));});
+test('Partial product data is rejected; kJ fallback converts correctly',()=>{assert.throws(()=>C.product({status:1,product:{product_name:'Test',nutriments:{'energy-kcal_100g':200}}}));const f=C.product({status:1,barcode:'12345678',product:{product_name:'Test',nutriments:{'energy-kj_100g':418.4,'proteins_100g':10,'carbohydrates_100g':12,'fat_100g':2}}});assert.ok(Math.abs(f.k-100)<.001);});
+test('Blank numerical input is not silently zero and HTML is escaped',()=>{assert.ok(Number.isNaN(C.number('')));assert.equal(C.number('75,5'),75.5);assert.equal(C.escape('<img src=x onerror="x">'),'&lt;img src=x onerror=&quot;x&quot;&gt;');});
+test('Recipe scaling preserves ingredients',()=>{const s=C.initial(),m={id:'m',food:foods[0],amount:100,date:now.toISOString()};s.recipes.push({id:'r',name:'Oats',ingredients:[m],servings:2,instructions:''});assert.equal(C.validate(s),true);assert.equal(C.totals(s.recipes[0].ingredients).k/2,186);assert.equal(m.amount,100);});

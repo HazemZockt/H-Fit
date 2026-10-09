@@ -14,5 +14,7 @@
   <key>NSMicrophoneUsageDescription</key><string>H-Fit braucht dein Mikrofon, wenn du eine Mahlzeit diktieren möchtest.</string>
   <key>NSSpeechRecognitionUsageDescription</key><string>Deine gesprochenen Mahlzeiten werden in Text umgewandelt. Je nach Gerät und Sprache kann Apple die Sprache online verarbeiten.</string>
   <key>NSMotionUsageDescription</key><string>H-Fit zeigt deine vom iPhone gemessenen Schritte und Strecken an.</string>
-  <key>NSCameraUsageDescription</key><string>H-Fit verwendet die Kamera nur, wenn du den Barcode eines Lebensmittels scannen möchtest.</string>
+  <key>NSCameraUsageDescription</key><string>H-Fit verwendet die Kamera, wenn du einen Lebensmittel-Barcode oder den QR-Code zur Kopplung mit deinem PC scannen möchtest.</string>
+  <key>NSLocalNetworkUsageDescription</key><string>H-Fit verbindet sich mit deinem gekoppelten Windows-PC im WLAN, damit dessen lokale KI deine Fragen beantworten kann.</string>
+  <key>NSAppTransportSecurity</key><dict><key>NSAllowsLocalNetworking</key><true/></dict>
 </dict></plist>

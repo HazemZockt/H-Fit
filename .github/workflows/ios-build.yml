@@ -11,7 +11,7 @@ permissions:
 jobs:
   build:
     runs-on: macos-15
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Xcode anzeigen
@@ -22,6 +22,16 @@ jobs:
         run: brew install xcodegen
       - name: Xcode-Projekt erzeugen
         run: xcodegen generate
+      - name: iPhone-Simulator auswählen
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(v["udid"] for k,vs in d["devices"].items() if "iOS" in k for v in vs if v["name"].startswith("iPhone")))')
+          echo "SIMULATOR_ID=$DEVICE_ID" >> "$GITHUB_ENV"
+      - name: Einrichtung und Tagesbilanz auf iOS testen
+        run: >-
+          xcodebuild test -project HFit.xcodeproj -scheme HFit
+          -destination "platform=iOS Simulator,id=$SIMULATOR_ID"
+          -derivedDataPath build/simulator -resultBundlePath build/UIResults
+          CODE_SIGNING_ALLOWED=NO
       - name: Native iPhone-App kompilieren
         run: >-
           xcodebuild -project HFit.xcodeproj -scheme HFit
@@ -40,3 +50,11 @@ jobs:
           path: build/HFit-unsigned.ipa
           retention-days: 7
           if-no-files-found: error
+      - name: Testergebnisse und Screenshots sichern
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: HFit-iOS-Testergebnisse
+          path: build/UIResults.xcresult
+          if-no-files-found: ignore
+          retention-days: 7

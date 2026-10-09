@@ -1,0 +1,41 @@
+const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {chromium}=require(process.env.HFIT_PLAYWRIGHT_MODULE||'playwright');
+const C=require('../assets/core.js');
+const assets=path.resolve(__dirname,'../assets');
+const allowed=['index.html','app.css','catalog.js','core.js','onboarding.js','chat.js','app.js','icon.png'];
+const server=http.createServer((req,res)=>{const file=req.url==='/'?'index.html':req.url.slice(1);if(!allowed.includes(file)){res.writeHead(404);res.end();return;}res.setHeader('Content-Type',file.endsWith('.css')?'text/css':file.endsWith('.js')?'application/javascript':file.endsWith('.png')?'image/png':'text/html');res.end(fs.readFileSync(path.join(assets,file)));});
+(async()=>{
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));let browser;
+ try{
+  browser=await chromium.launch({executablePath:process.env.HFIT_CHROME_PATH,headless:true});
+  const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[];
+  page.on('pageerror',e=>errors.push(e.message));
+  await page.addInitScript(()=>{window.HFitNative={load:()=>localStorage.getItem('hfit-test')||'',save:s=>{if(window.failSave)return false;localStorage.setItem('hfit-test',s);return true;},importBackup:()=>{}};});
+  await page.goto('http://127.0.0.1:'+server.address().port);
+  const next=()=>page.getByRole('button',{name:'Weiter',exact:true}).click();
+  const shots=path.resolve(__dirname,'../build/qa');fs.mkdirSync(shots,{recursive:true});
+  assert.equal(await page.locator('.nav').count(),0);
+  await next();assert.match(await page.locator('#setup-error').textContent(),/Spitzname/);
+  await page.locator('#setup-name').fill('Alex');await page.locator('#setup-age').fill('25');
+  await page.evaluate(()=>render());assert.equal(await page.locator('#setup-name').inputValue(),'Alex');
+  await page.screenshot({path:path.join(shots,'setup-1.png'),fullPage:true});
+  await next();await page.locator('#setup-height').fill('175');await page.locator('#setup-weight').fill('75,5');
+  await page.getByRole('button',{name:'Zurück',exact:true}).click();assert.equal(await page.locator('#setup-name').inputValue(),'Alex');await next();assert.equal(await page.locator('#setup-weight').inputValue(),'75,5');await next();
+  await page.getByRole('button',{name:'Los geht’s',exact:true}).click();assert.match(await page.locator('#setup-error').textContent(),/Bewegung/);
+  await page.locator('input[name="setup-goal"][value="build"]').check();await page.locator('input[name="setup-activity"][value="moderate"]').check();
+  await page.screenshot({path:path.join(shots,'setup-3.png'),fullPage:true});
+  await page.evaluate(()=>window.failSave=true);await page.getByRole('button',{name:'Los geht’s',exact:true}).click();assert.equal(await page.evaluate(()=>state.setupComplete),false);assert.equal(await page.locator('#setup-title').count(),1);
+  await page.evaluate(()=>window.failSave=false);await page.getByRole('button',{name:'Los geht’s',exact:true}).click();
+  assert.equal(await page.evaluate(()=>state.profile.weight),75.5);assert.equal(await page.evaluate(()=>state.weights.length),1);
+  await page.reload();assert.equal(await page.locator('#setup-title').count(),0);assert.equal(await page.locator('h1').textContent(),'Hey, Alex.');
+  await page.getByRole('button',{name:'Mein Plan',exact:true}).click();await page.getByRole('button',{name:'Profil bearbeiten',exact:true}).click();await page.locator('#setup-name').fill('Nicht speichern');await page.getByRole('button',{name:'Abbrechen',exact:true}).click();assert.equal(await page.evaluate(()=>state.profile.name),'Alex');
+  await page.getByRole('button',{name:'Profil bearbeiten',exact:true}).click();await page.locator('#setup-age').fill('16');await next();await next();assert.equal(await page.getByText('Abnehmen',{exact:true}).count(),0);await page.getByRole('button',{name:'Änderungen speichern',exact:true}).click();assert.equal(await page.evaluate(()=>state.profile.adult),false);assert.equal(await page.getByRole('button',{name:'Richtwerte bearbeiten',exact:true}).count(),0);
+  const legacy=C.initial();delete legacy.setupComplete;delete legacy.profile.age;legacy.profile.name='Alt';legacy.water.push({id:'w',date:new Date().toISOString(),amount:500});
+  await page.evaluate(s=>localStorage.setItem('hfit-test',JSON.stringify(s)),legacy);await page.reload();assert.equal(await page.locator('#setup-name').inputValue(),'Alt');assert.equal(await page.evaluate(()=>state.water.length),1);
+  await page.locator('#setup-age').fill('30');await next();await next();await page.locator('input[name="setup-activity"][value="low"]').check();await page.getByRole('button',{name:'Los geht’s',exact:true}).click();assert.equal(await page.evaluate(()=>state.water[0].amount),500);
+  await page.getByRole('button',{name:'Mein Plan',exact:true}).click();await page.getByRole('button',{name:'Profil bearbeiten',exact:true}).click();
+  await page.setViewportSize({width:320,height:740});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await next();await next();assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  await page.setViewportSize({width:800,height:1000});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  assert.deepEqual(errors,[]);console.log('PASS: onboarding validation, back navigation, optional measurements, failed save, completion, reload, edit/cancel, minors, legacy migration, 320/390/800 px layouts.');
+ }finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve));}
+})().catch(e=>{console.error(e);process.exitCode=1;});

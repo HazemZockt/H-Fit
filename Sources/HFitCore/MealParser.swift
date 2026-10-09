@@ -31,6 +31,7 @@ public enum MealParser {
             let hour: Int? = input.contains("frühstück") || input.contains("morgens") ? 8 : input.contains("mittags") || input.contains("mittagessen") ? 12 : input.contains("abends") || input.contains("abendessen") ? 19 : nil
             if let hour { date = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: date) ?? date }
         }
+        if date > now { date = now; notes.append("Die erkannte Zeit lag in der Zukunft. Bitte den Zeitpunkt prüfen.") }
         input = replace(timePattern, in: input, with: " ")
         input = replace(#"\b(heute|gestern|vorgestern|morgens|mittags|abends|zum frühstück|frühstück|zum mittagessen|mittagessen|zum abendessen|abendessen|ich habe|ich hab|ich|habe|hab|gegessen|getrunken|hatte|noch|dazu)\b"#, in: input, with: " ")
         input = replace(#"\b(eine?|einen)\s+halbe?[nr]?\b"#, in: input, with: "0.5")

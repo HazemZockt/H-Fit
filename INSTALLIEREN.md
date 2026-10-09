@@ -9,7 +9,7 @@ Du brauchst einen Windows-PC, dein iPhone mit iOS 17 oder neuer, ein USB-Kabel, 
 1. `HFit-Quellcode.zip` in einen normalen Ordner entpacken.
 2. Auf [GitHub](https://github.com/new) anmelden und ein neues Repository namens `H-Fit` anlegen.
 3. Für den beschriebenen kostenlosen Weg ein **öffentliches** Repository verwenden. Dadurch ist dein App-Code öffentlich. Lade keine Tagebuchsicherungen, persönlichen Daten oder Zugangsdaten hoch. Der mitgelieferte Quellcode enthält keine solchen Daten.
-4. **Upload files** bzw. **Add file → Upload files** wählen. Die Inhalte des entpackten Ordners hochladen, sodass `Package.swift`, `project.yml`, `App`, `Sources`, `Tests` und **`.github`** direkt in der Repository-Wurzel liegen. Nicht die ZIP-Datei hochladen und keinen zusätzlichen übergeordneten Ordner einfügen.
+4. **Upload files** bzw. **Add file → Upload files** wählen. Die Inhalte des aktuellen entpackten Ordners hochladen, sodass `Package.swift`, `project.yml`, `App`, `Sources`, `Tests`, `UITests` und **`.github`** direkt in der Repository-Wurzel liegen. Nicht die ZIP-Datei hochladen und keinen zusätzlichen übergeordneten Ordner einfügen. Eine früher entpackte Kopie enthält noch die alte Version; die ZIP für Version 1.3 erneut in einen neuen Ordner entpacken.
 5. Unter **Commit changes** speichern. Falls die Weboberfläche `.github` nicht übernimmt, über **Add file → Create new file** den Pfad `.github/workflows/ios-build.yml` anlegen und den Inhalt der gleichnamigen lokalen Datei hineinkopieren.
 
 GitHubs Standard-Runner sind für öffentliche Repositories kostenlos. Private Repositories haben Freikontingente und können bei Überschreitung Kosten auslösen. Der mitgelieferte Workflow nutzt einen Standard-Mac-Runner, keine kostenpflichtigen größeren Runner. Artefakte werden nach sieben Tagen entfernt. [GitHub-Preise und Freikontingente](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
@@ -18,7 +18,7 @@ GitHubs Standard-Runner sind für öffentliche Repositories kostenlos. Private R
 
 1. Im Repository den Reiter **Actions** öffnen; Actions gegebenenfalls aktivieren.
 2. Links **iPhone-App bauen** wählen. Nach dem ersten Hochladen startet ein Lauf auf `main` oder `master` automatisch. Alternativ **Run workflow** anklicken.
-3. Warten, bis die Tests und der Build grün sind. Das kann einige Minuten dauern.
+3. Warten, bis Kern-Tests, iPhone-Simulator-Test und Release-Build grün sind. Der Simulator-Test prüft die Einrichtung und eine berechnete Mahlzeit; seine Screenshots liegen im zusätzlichen Testartefakt.
 4. Den erfolgreichen Lauf öffnen. Unter **Artifacts** das Paket **HFit-iPhone** herunterladen.
 5. Dieses Paket entpacken. Darin liegt **HFit-unsigned.ipa**.
 
@@ -36,7 +36,7 @@ Bei einem roten Lauf entsteht keine verlässlich installierbare Datei. Den fehlg
 
 ## 4. Die App zum ersten Mal verwenden
 
-1. Unter **Mein Plan** optional Namen und Fokus einstellen und speichern. Kalorien- und Eiweißrichtwerte sind optional; `0` deaktiviert sie.
+1. Die drei Einrichtungsschritte durchgehen: Name/Alter, Größe/Gewicht/Formel, Ziel und Alltagsbewegung. Die Vorschau zeigt deinen geschätzten Plan. Automatische Richtwerte sind abschaltbar; fehlende Körperdaten verhindern die Berechnung, nicht die Nutzung des Tagebuchs. Spätere Änderungen unter **Mein Plan → Profil und Berechnung bearbeiten**.
 2. Auf **Heute → Was hast du gegessen?** tippen. Beispiel: `Heute um 8 Uhr 60 g Haferflocken mit 200 ml Milch und eine Banane`.
 3. **Mahlzeit erkennen** wählen. Zeitpunkt, Lebensmittel und Mengen prüfen, dann speichern. Die Beispielmenge ergibt mit den eingebauten Richtwerten etwa **424 kcal**.
 4. Für Diktat **Mahlzeit diktieren** antippen; Mikrofon und Sprache nur bei Bedarf freigeben. Text funktioniert auch ohne diese Freigaben.
@@ -44,6 +44,7 @@ Bei einem roten Lauf entsteht keine verlässlich installierbare Datei. Den fehlg
 6. Unter **Bewegung** die Bewegungsdaten freigeben, um deine iPhone-Schritte zu sehen.
 7. Unter **Mein Plan → Eigene Rezepte & Mahlzeiten** häufige Gerichte speichern und später portionsweise erfassen.
 8. Ab und zu **Sicherung exportieren** nutzen, besonders vor einer Neuinstallation oder einem Gerätewechsel.
+9. Unter **Assistent** z. B. „Wie ist meine Bilanz heute?“ fragen. Die Antwort wird aus deinen Daten berechnet. Für beliebige KI-Beratung ist kein Modell verbunden.
 
 ## 5. Nach sieben Tagen erneuern
 

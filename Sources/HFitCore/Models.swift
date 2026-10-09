@@ -70,9 +70,11 @@ public struct Profile: Codable, Sendable {
     public var calorieTarget: Double = 0
     public var proteinTarget: Double = 0
     public var adult = false
+    // Optional additions keep existing v1 backups readable.
+    public var setup: SetupProfile?
     public init() {}
     public var isValid: Bool {
-        name.count <= 80 && calorieTarget.isFinite && calorieTarget >= 0 && calorieTarget <= 10000 && proteinTarget.isFinite && proteinTarget >= 0 && proteinTarget <= 500
+        name.count <= 80 && calorieTarget.isFinite && calorieTarget >= 0 && calorieTarget <= 10000 && proteinTarget.isFinite && proteinTarget >= 0 && proteinTarget <= 500 && (setup?.isValid ?? true) && (setup.map { adult == ($0.age >= 18) } ?? true)
     }
 }
 
@@ -86,6 +88,8 @@ public struct Diary: Codable, Sendable {
     public var weights: [WeightEntry] = []
     public var recipes: [Recipe] = []
     public var fastingStart: Date?
+    public var chat: [ChatEntry]?
+    public var completedDays: [String]?
     public init() {}
     public func validate() throws {
         guard version == 1, profile.isValid, meals.count <= 100000, workouts.count <= 100000, customFoods.count <= 10000,
@@ -95,7 +99,12 @@ public struct Diary: Codable, Sendable {
               water.count <= 100000, water.allSatisfy(\.isValid), Set(water.map(\.id)).count == water.count,
               weights.count <= 100000, weights.allSatisfy(\.isValid), Set(weights.map(\.id)).count == weights.count,
               recipes.count <= 10000, recipes.allSatisfy(\.isValid), Set(recipes.map(\.id)).count == recipes.count,
-              fastingStart.map(validDiaryDate) ?? true else { throw DiaryError.invalidBackup }
+              fastingStart.map(validDiaryDate) ?? true,
+              (chat?.count ?? 0) <= 400, chat?.allSatisfy(\.isValid) ?? true,
+              Set((chat ?? []).map(\.id)).count == (chat?.count ?? 0) else { throw DiaryError.invalidBackup }
+        guard (completedDays?.count ?? 0) <= 10000,
+              Set(completedDays ?? []).count == (completedDays?.count ?? 0),
+              completedDays?.allSatisfy({ $0.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil }) ?? true else { throw DiaryError.invalidBackup }
     }
     public func total(on date: Date, calendar: Calendar = .current) -> Nutrients {
         meals.filter { calendar.isDate($0.date, inSameDayAs: date) }.reduce(Nutrients()) { $0 + $1.nutrients }

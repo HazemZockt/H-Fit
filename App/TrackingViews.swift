@@ -61,15 +61,22 @@ struct HistoryView: View {
     @EnvironmentObject private var store: DiaryStore
     @State private var selected = Date()
     @State private var editing: Meal?
+    @State private var overview = "Woche"
     var days: [Date] { (0..<7).reversed().compactMap { Calendar.current.date(byAdding: .day, value: -$0, to: Calendar.current.startOfDay(for: Date())) } }
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    Picker("Übersicht", selection: $overview) { Text("Woche").tag("Woche"); Text("Monat").tag("Monat") }.pickerStyle(.segmented)
+                }
+                if overview == "Monat" { Section("Monatsübersicht") { MonthCalendar(selected: $selected) } }
+                else {
                 Section("Deine letzten 7 Tage") {
                     Chart(days, id: \.self) { day in
                         BarMark(x: .value("Tag", day, unit: .day), y: .value("kcal", store.diary.total(on: day).kcal)).foregroundStyle(Palette.lime).cornerRadius(5)
                     }.frame(height: 180).chartXAxis { AxisMarks(values: .stride(by: .day)) { AxisValueLabel(format: .dateTime.weekday(.abbreviated)) } }
                     Text("Erfasste Kalorien. Tage ohne Einträge bedeuten fehlende Daten.").font(.caption).foregroundStyle(.secondary)
+                }
                 }
                 Section {
                     DatePicker("Tag auswählen", selection: $selected, in: ...Date(), displayedComponents: .date)
@@ -78,6 +85,14 @@ struct HistoryView: View {
                     let meals = store.diary.meals.filter { Calendar.current.isDate($0.date, inSameDayAs: selected) }.sorted { $0.date < $1.date }
                     ForEach(meals) { meal in Button { editing = meal } label: { MealRow(meal: meal) }.buttonStyle(.plain).listRowInsets(EdgeInsets()) }
                     if meals.isEmpty { Text("An diesem Tag ist noch nichts eingetragen.").foregroundStyle(.secondary) }
+                    Toggle("Tag vollständig erfasst", isOn: Binding(get: { store.diary.completedDays?.contains(DayBalance.key(selected)) == true }, set: { value in
+                        _ = store.update { diary in
+                            let key = DayBalance.key(selected)
+                            diary.completedDays = (diary.completedDays ?? []).filter { $0 != key }
+                            if value { diary.completedDays?.append(key) }
+                        }
+                    })).disabled(meals.isEmpty)
+                    if overview == "Monat" { Text("Erst einschalten, wenn alle Mahlzeiten dieses Tages eingetragen sind. Ohne Kalorien- und Eiweißrichtwert bleibt der Ring grau.").font(.caption).foregroundStyle(.secondary) }
                 } header: { Text("Tagebuch") }
                 Section("Gewichtsverlauf") { WeightTrackingView() }
             }.navigationTitle("Dein Verlauf").sheet(item: $editing) { EditMealView(meal: $0) }
@@ -117,7 +132,7 @@ struct WaterCard: View {
             HStack {
                 Label("Wasser", systemImage: "drop.fill").foregroundStyle(.cyan).font(.headline)
                 Spacer()
-                Text("\((entries.reduce(0) { $0 + $1.milliliters } / 1000).formatted(.number.precision(.fractionLength(2)))) l").font(.title2.bold())
+                Text("\((store.diary.waterTotal() / 1000).formatted(.number.precision(.fractionLength(2)))) l").font(.title2.bold())
             }
             HStack {
                 Button("+ 250 ml") { _ = store.update { $0.water.append(WaterEntry(milliliters: 250)) } }.buttonStyle(.bordered)
@@ -125,7 +140,7 @@ struct WaterCard: View {
                 Spacer()
                 Button { if let last = entries.last { _ = store.update { $0.water.removeAll { $0.id == last.id } } } } label: { Image(systemName: "arrow.uturn.backward") }.disabled(entries.isEmpty).accessibilityLabel("Letzten Wassereintrag rückgängig machen")
             }.padding(.top, 8)
-            Text("Wasser separat zählen; getrackte Getränke werden hier nicht automatisch addiert.").font(.caption).foregroundStyle(.secondary)
+            Text("Wasser aus deinem Tagebuch zählt mit. Dieselbe Portion bitte nur einmal erfassen. Andere Getränke bleiben im Ernährungstagebuch.").font(.caption).foregroundStyle(.secondary)
         }
     }
 }

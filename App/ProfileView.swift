@@ -11,22 +11,33 @@ struct ProfileView: View {
     @State private var document: BackupDocument?
     @State private var pending: Diary?
     @State private var showRestore = false
+    @State private var editSetup = false
     var body: some View {
         NavigationStack {
             Form {
                 Section("Dein Plan") {
-                    TextField("Dein Vorname (optional)", text: $profile.name)
-                    Toggle("Ich bin mindestens 18 Jahre alt", isOn: $profile.adult)
-                    if profile.adult {
-                        Picker("Mein Fokus", selection: $profile.goal) { ForEach(Goal.allCases, id: \.self) { Text($0.rawValue).tag($0) } }
+                    Text(store.diary.profile.name).font(.title2.bold())
+                    Text(store.diary.profile.goal.rawValue).foregroundStyle(Palette.lime)
+                    Button("Profil und Berechnung bearbeiten") { editSetup = true }
+                    if let plan = store.diary.plan() {
+                        LabeledContent("Täglicher Richtwert", value: "≈ \(Int(plan.calories)) kcal")
+                        LabeledContent("Eiweiß", value: "\(Int(plan.protein)) g")
+                        LabeledContent("Kohlenhydrate", value: "\(Int(plan.carbs)) g")
+                        LabeledContent("Fett", value: "\(Int(plan.fat)) g")
+                        Text("Ruhebedarf ≈ \(Int(plan.resting.rounded())) kcal, mit Alltagsbewegung ≈ \(Int(plan.maintenance.rounded())) kcal. Bei Abnehmen: −10 %, höchstens 300 kcal; bei Muskelaufbau: +5 %, höchstens 200 kcal. Der Startwert liegt mindestens bei 1.500 kcal und dem geschätzten Ruhebedarf. Dies sind konservative App-Einstellungen, keine gemessenen Grenzen deines Bedarfs.").font(.footnote).foregroundStyle(.secondary)
+                        Text("Grundlage: Mifflin–St Jeor. Aktivitätsfaktor je nach Auswahl: 1,2 / 1,5 / 1,75. Eiweiß 1,2 g/kg, beim Muskelaufbau 1,6 g/kg (maximal 30 % der Energie); Fett etwa 30 %, Kohlenhydrate aus der verbleibenden Energie. Neue Gewichtseinträge aktualisieren die Schätzung.").font(.footnote).foregroundStyle(.secondary)
+                        Link("Berechnungsgrundlage", destination: URL(string: "https://pubmed.ncbi.nlm.nih.gov/2305711/")!)
+                    } else {
+                        Text(Planning.unavailableReason(store.diary.profile)).font(.footnote).foregroundStyle(.secondary)
+                    }
+                    if profile.adult && profile.setup?.automatic != true {
                         HStack { Text("Kalorienrichtwert"); TextField("Optional", value: $profile.calorieTarget, format: .number).keyboardType(.decimalPad).multilineTextAlignment(.trailing); Text("kcal").foregroundStyle(.secondary) }
                         HStack { Text("Eiweißrichtwert"); TextField("Optional", value: $profile.proteinTarget, format: .number).keyboardType(.decimalPad).multilineTextAlignment(.trailing); Text("g").foregroundStyle(.secondary) }
-                        Text("0 = kein Ziel. Trage einen passenden, selbst gewählten Richtwert ein. Die App berechnet keine individuelle Diätvorgabe. Bei Schwangerschaft, Erkrankungen oder Problemen mit dem Essen bitte fachlichen Rat einholen.").font(.footnote).foregroundStyle(.secondary)
+                        Text("0 = kein eigener Richtwert. Automatische Richtwerte lassen sich in der Profileinrichtung einschalten.").font(.footnote).foregroundStyle(.secondary)
+                        Button(saved ? "Gespeichert ✓" : "Eigene Richtwerte speichern") {
+                            saved = store.update { $0.profile.calorieTarget = profile.calorieTarget; $0.profile.proteinTarget = profile.proteinTarget }
+                        }.disabled(!profile.isValid)
                     }
-                    Button(saved ? "Gespeichert ✓" : "Plan speichern") {
-                        if !profile.adult { profile.calorieTarget = 0; profile.proteinTarget = 0; profile.goal = .balance }
-                        saved = store.update { $0.profile = profile }
-                    }.disabled(!profile.isValid)
                 }
                 Section("Mehr für deinen Alltag") {
                     NavigationLink("Eigene Rezepte & Mahlzeiten") { RecipesView() }
@@ -43,6 +54,7 @@ struct ProfileView: View {
                 }
                 Section("So arbeitet H-Fit") {
                     Text("Text: lokale Erkennung mit Grundnahrungsmitteln und eigenen Produkten. Keine allgemeine KI. Portions- und Nährwertschätzungen können abweichen.")
+                    Text("Assistent: lokale Auswertungen deines Tagebuchs. Kein Sprachmodell und keine automatische Weitergabe deiner Daten. Ältere Antworten sind Momentaufnahmen zum Zeitpunkt der Frage.")
                     Text("Sprache: Apples Spracherkennung; wenn verfügbar auf dem Gerät. Sonst ist eine Verarbeitung durch Apple möglich.")
                     Text("Barcode: Eine Anfrage mit dem Produktcode geht an Open Food Facts. Dein Tagebuch wird nicht übertragen. Produktdaten können unvollständig oder fehlerhaft sein.")
                     Text("Aktivität: iPhone-Schritte über Core Motion. Keine Apple-Health-Verbindung, kein automatisch gemessener Kalorienverbrauch.")
@@ -50,9 +62,10 @@ struct ProfileView: View {
                     Link("Orientierung zu ausgewogener Ernährung (NHS)", destination: URL(string: "https://www.nhs.uk/better-health/lose-weight/calorie-counting/")!)
                     Link("Eiweiß & Muskeltraining (ACSM)", destination: URL(string: "https://www.acsm.org/docs/default-source/files-for-resource-library/protein-intake-for-optimal-muscle-maintenance.pdf")!)
                 }.font(.footnote)
-                Section { Text("H-Fit 1.0 · Mit deinem Alltag wachsen.").foregroundStyle(.secondary) }
+                Section { Text("H-Fit 1.3 · Mit deinem Alltag wachsen.").foregroundStyle(.secondary) }
             }.navigationTitle("Mein Plan")
                 .onAppear { profile = store.diary.profile }
+                .sheet(isPresented: $editSetup, onDismiss: { profile = store.diary.profile; saved = false }) { SetupView(profile: store.diary.profile, editing: true) }
                 .onChange(of: profile.name) { _, _ in saved = false }
                 .onChange(of: profile.calorieTarget) { _, _ in saved = false }
                 .onChange(of: profile.proteinTarget) { _, _ in saved = false }

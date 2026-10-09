@@ -24,7 +24,20 @@ targets:
         PRODUCT_NAME: HFit
         INFOPLIST_FILE: App/Info.plist
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        MARKETING_VERSION: '1.0.0'
-        CURRENT_PROJECT_VERSION: '1'
+        MARKETING_VERSION: '1.4.0'
+        CURRENT_PROJECT_VERSION: '5'
     scheme:
       gatherCoverageData: false
+      testTargets:
+        - HFitUITests
+  HFitUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: HFit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: de.hfit.personal.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: HFit

@@ -12,7 +12,9 @@ import Combine
     @Published private(set) var recoveryRequired = false
     private let url: URL
     init() {
-        url = URL.applicationSupportDirectory.appending(path: "HFit/diary.json")
+        let testing = ProcessInfo.processInfo.arguments.contains("--hfit-ui-test")
+        url = URL.applicationSupportDirectory.appending(path: testing ? "HFitUITests/diary.json" : "HFit/diary.json")
+        if testing { try? FileManager.default.removeItem(at: url) }
         do {
             if FileManager.default.fileExists(atPath: url.path) {
                 let loaded = try JSONDecoder().decode(Diary.self, from: Data(contentsOf: url))

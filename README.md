@@ -1,11 +1,16 @@
 # H-Fit für dein iPhone
 
+**Neu: Android-Testversion für deinen PC-Emulator.** Die fertig kompilierte `HFit-Android-Test.apk` liegt im Projektordner. Sie lässt sich direkt im Emulator installieren. Anleitung und tatsächlicher Prüfstand: **[ANDROID-TESTEN.md](ANDROID-TESTEN.md)**. Der folgende Abschnitt beschreibt weiterhin die separate iPhone-Version.
+
 Eine native, deutschsprachige SwiftUI-App für iPhone 15 und andere iPhones ab iOS 17. Die Bedienung und Funktionen orientieren sich an einem klassischen Ernährungstagebuch wie YAZIO. Oberfläche, Code und enthaltene Grunddaten sind eigenständig; YAZIO-Code, dessen Produktdatenbank, Bilder und Rezepttexte werden nicht verwendet.
 
 **Status:** Quellcode und Build-Workflow sind vorbereitet. Noch keine kompilierte oder auf einem iPhone geprüfte Version. Auf diesem Windows-Rechner stehen Xcode und ein iOS-Simulator nicht zur Verfügung. Eine installierbare IPA entsteht erst nach einem erfolgreichen GitHub-Actions-Build. Die Gerätefunktionen brauchen anschließend einen Test auf deinem iPhone.
 
 ## Was im Code enthalten ist
 
+- Neu in 1.3: Einrichtung ohne Konto in drei Schritten auch auf dem iPhone: Name/Alter, Körperangaben/Formel, Ziel/Alltagsbewegung mit Planvorschau. Alte iPhone-Tagebücher bleiben erhalten und öffnen einmalig die Einrichtung.
+- Persönliche, abschaltbare Kalorien- und Makroschätzungen für Erwachsene, Tagesrest und Aktualisierung nach Gewichtseinträgen. Berechnung und Grenzen sind unter „Mein Plan“ erklärt.
+- Lokaler Assistent mit echten Tages-, Eiweiß-, Wasser-, Trainings- und Wochenauswertungen aus deinen Einträgen. Kein verbundenes Sprachmodell; Antworten sind Momentaufnahmen zum Fragezeitpunkt.
 - Mahlzeiten auf Deutsch schreiben oder diktieren; vor dem Speichern Mengen und Zeitpunkt prüfen.
 - Lokale Erkennung von über 60 Grundnahrungsmitteln sowie eigenen Produkten, mit Gramm, Millilitern, Stückzahlen, Dezimalkomma, „gestern“ und Uhrzeiten.
 - Kalorien, Eiweiß, Kohlenhydrate und Fett automatisch aus den bestätigten Mengen berechnen.
@@ -25,7 +30,7 @@ Dies ist ein erster eigenständiger Funktionsumfang, keine vollständige Kopie a
 
 Die Texteingabe nutzt einen begrenzten Offline-Erkenner, kein Sprachmodell. Unbekannte Gerichte, beliebige Formulierungen oder Fotos lassen sich nicht zuverlässig automatisch analysieren. Grundnährwerte und Standardportionen sind grobe Richtwerte. Öl, Soßen und Zubereitung müssen berücksichtigt werden. Reis und Nudeln sind standardmäßig gekocht; für Rohgewicht explizit „Reis trocken“ bzw. „Nudeln trocken“ angeben. Essenszeiten werden auf einen gemeinsamen Zeitpunkt pro Eingabe gesetzt; mehrere Zeiten bitte getrennt erfassen.
 
-Es gibt **keine KI-Fotoanalyse, allgemeine KI-Beratung, fertige Rezeptbibliothek, Apple-Health-/Watch-Synchronisierung, Cloud-Synchronisierung, automatisch gemessenen Kalorienverbrauch oder Berechnung eines persönlichen Kalorienbedarfs**. Schritte werden nicht in Essenskalorien umgerechnet. Wasserbuttons zählen separat und übernehmen Getränke aus dem Tagebuch nicht automatisch. Eigene Kalorien-/Eiweißrichtwerte sind optional und nur nach Bestätigung der Volljährigkeit sichtbar.
+Es gibt **keine KI-Fotoanalyse, allgemeine KI-Beratung, fertige Rezeptbibliothek, Apple-Health-/Watch-Synchronisierung, Cloud-Synchronisierung oder automatisch gemessenen Kalorienverbrauch**. Die neue Bedarfsschätzung verwendet Mifflin–St Jeor, Alltagsfaktoren (1,2 / 1,5 / 1,75) und kleine Zielanpassungen. Sie ist für gesunde Erwachsene gedacht, nicht bei Schwangerschaft, Stillzeit oder besonderen Ernährungsanforderungen. Bei unvollständigen Angaben und Untergewicht wird kein automatisches Ziel erzeugt. Minderjährige erhalten keine Kalorien-/Abnehmziele. Die Aktivität steckt bereits im Faktor; Schritte und Training werden nicht nochmals als Essensbudget addiert. Wasser aus dem Tagebuch wird zu den Wasserbuttons addiert; dieselbe Portion nur einmal eintragen. Andere Getränke werden nicht automatisch als Wasser gewertet.
 
 Sprache verwendet Apples Speech-Framework. Wenn lokale Erkennung verfügbar ist, wird sie verwendet; sonst kann Apple Sprache online verarbeiten. Barcodeabfragen brauchen Internet; sonst funktioniert das Tagebuch lokal. Die App hat weder Abonnement noch eingebauten Bezahldienst.
 
@@ -43,7 +48,9 @@ xcodegen generate
 xcodebuild -project HFit.xcodeproj -scheme HFit -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
 ```
 
-Die Projektdatei wird aus `project.yml` erzeugt. `Package.swift` enthält den plattformunabhängigen Kern und 13 XCTest-Fälle für Mengen, Zeiten, mehrdeutige Lebensmittel, Nährwertsummen, Rezeptportionen und Sicherungsvalidierung. `App/` enthält SwiftUI, Spracherkennung, Schrittzählung und Barcodeerfassung. Der GitHub-Workflow führt die Tests vor dem iOS-Build aus und erzeugt dann `HFit-unsigned.ipa`.
+Die Projektdatei wird aus `project.yml` erzeugt. `Package.swift` enthält den plattformunabhängigen Kern und 23 XCTest-Fälle für Mengen, Zeiten, Nährwerte, Bedarfsschätzungen, Einrichtung/Migration, Gewichtsaktualisierung, Wasser und Assistent. `App/` enthält SwiftUI und die Geräteanbindungen. `UITests/` prüft zusätzlich im iPhone-Simulator Einrichtung, Kalorienrichtwert, Mahlzeit und Assistent mit Screenshots. Der GitHub-Workflow muss beide Teststufen bestehen, bevor er `HFit-unsigned.ipa` veröffentlicht. Diese Swift-Tests sind auf Windows noch nicht ausgeführt.
+
+Android-Logiktests: `npm test`. Browserprüfungen: `npm install`, `npx playwright install chromium`, `npm run test:ui`. Optional können `HFIT_PLAYWRIGHT_MODULE` und `HFIT_CHROME_PATH` auf eine vorhandene Installation zeigen. Native Android-Dienste sind in den Browserprüfungen simuliert.
 
 Für die lokale Konfigurationsprüfung auf Windows optional Python mit Pillow und PyYAML verwenden:
 
@@ -63,6 +70,8 @@ Kameraaufnahmen für Barcodes werden nicht hochgeladen. Open Food Facts erhält 
 
 ## Quellen und Daten
 
+- [Mifflin et al. (1990)](https://pubmed.ncbi.nlm.nih.gov/2305711/): Ruheenergie-Formel. Aktivitätsfaktoren, −10 % (max. 300 kcal) fürs Abnehmen, +5 % (max. 200 kcal) für Aufbau sowie die Untergrenze sind vorsichtige App-Einstellungen, keine versprochene Gewichtsrate oder medizinisch gemessene Grenzen.
+- [ISSN zu Eiweiß und Sport](https://pmc.ncbi.nlm.nih.gov/articles/PMC2117006/): Hintergrund zum Eiweißrichtwert bei Bewegung. [NIDDK Body Weight Planner](https://www.niddk.nih.gov/health-information/weight-management/body-weight-planner): Erwachsenen-Anwendungsbereich und Ausschluss Schwangerschaft/Stillzeit; die App implementiert nicht das NIDDK-Modell.
 - [YAZIO-Funktionsübersicht](https://help.yazio.com/hc/de/articles/11804776635281-Anleitung-zur-Yazio-App): Funktionsvorbild, keine Übernahme von Code oder Inhalten.
 - [Open Food Facts](https://world.openfoodfacts.org/terms-of-use): Produktdaten unter ODbL, einzelne Dateninhalte unter Database Contents License. In der App sichtbar zugeordnet. Die unterstützte API v2 wird isoliert in `FoodLookup` verwendet; Migration auf v3 ist bei Änderungen der API möglich. Vor einer öffentlichen Verbreitung des Projekts die [API-Nutzungsregistrierung](https://openfoodfacts.github.io/openfoodfacts-server/api/) mit eigenen Kontaktangaben durchführen.
 - [Apple Core Motion](https://developer.apple.com/documentation/coremotion/cmpedometer): Schritte und Strecke.

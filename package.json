@@ -1,0 +1,10 @@
+{
+  "name": "hfit-checks",
+  "version": "1.3.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test android/tests/core.test.cjs android/tests/onboarding.test.cjs android/tests/chat.test.cjs android/tests/planning.test.cjs",
+    "test:ui": "node android/tests/run-ui.cjs"
+  },
+  "devDependencies": { "playwright": "1.62.1" }
+}

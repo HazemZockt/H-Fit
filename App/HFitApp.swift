@@ -12,10 +12,11 @@ enum Palette {
 @main struct HFitApp: App {
     @StateObject private var store = DiaryStore()
     @StateObject private var motion = MotionService()
+    @StateObject private var ai = AICompanion()
     @Environment(\.scenePhase) private var phase
     var body: some Scene {
         WindowGroup {
-            RootView().environmentObject(store).environmentObject(motion)
+            RootView().environmentObject(store).environmentObject(motion).environmentObject(ai)
                 .preferredColorScheme(.dark).tint(Palette.lime)
                 .onChange(of: phase) { _, phase in if phase == .active { motion.refresh() } }
                 .alert("H-Fit", isPresented: Binding(get: { store.error != nil }, set: { if !$0 { store.error = nil } })) {
@@ -26,12 +27,18 @@ enum Palette {
 }
 
 struct RootView: View {
+    @EnvironmentObject private var store: DiaryStore
     var body: some View {
+        if store.diary.profile.setup == nil && !store.recoveryRequired {
+            SetupView(profile: store.diary.profile)
+        } else {
         TabView {
             TodayView().tabItem { Label("Heute", systemImage: "circle.dotted.circle.fill") }
             ActivityView().tabItem { Label("Bewegung", systemImage: "figure.walk") }
+            CoachView().tabItem { Label("Assistent", systemImage: "bubble.left.and.text.bubble.right") }
             HistoryView().tabItem { Label("Verlauf", systemImage: "chart.bar.xaxis") }
             ProfileView().tabItem { Label("Mein Plan", systemImage: "person.crop.circle") }
+        }
         }
     }
 }
@@ -49,7 +56,7 @@ struct TodayView: View {
     private let timer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
     @State private var today = Date()
     var total: Nutrients { store.diary.total(on: today) }
-    var target: Double { store.diary.profile.adult ? store.diary.profile.calorieTarget : 0 }
+    var target: Double { store.diary.calorieGoal(on: today) }
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -69,7 +76,10 @@ struct TodayView: View {
                                 Text("HEUTE GEGESSEN").font(.caption.weight(.semibold)).tracking(1.4).foregroundStyle(.secondary)
                                 Text("\(Int(total.kcal.rounded()))").font(.system(size: 52, weight: .bold, design: .rounded)).contentTransition(.numericText())
                                 Text("Kilokalorien · geschätzt").font(.subheadline).foregroundStyle(.secondary)
-                                if target > 0 { Text("Dein Richtwert: \(Int(target)) kcal").font(.subheadline).foregroundStyle(Palette.lime) }
+                                if target > 0 {
+                                    Text("Dein Richtwert: \(Int(target)) kcal").font(.subheadline).foregroundStyle(Palette.lime)
+                                    Text(total.kcal <= target ? "Noch \(Int((target - total.kcal).rounded())) kcal offen" : "\(Int((total.kcal - target).rounded())) kcal über Richtwert").font(.subheadline)
+                                }
                             }
                             Spacer(minLength: 8)
                             ZStack {
@@ -83,6 +93,9 @@ struct TodayView: View {
                             macro("Kohlenhydrate", total.carbs, Palette.lime)
                             macro("Fett", total.fat, .orange)
                         }.padding(.top, 20)
+                        if store.diary.proteinGoal(on: today) > 0 {
+                            Text("Eiweiß: \(Int(total.protein.rounded())) / \(Int(store.diary.proteinGoal(on: today))) g").font(.caption).foregroundStyle(.secondary).padding(.top, 10)
+                        }
                     }
                     Button { add = true } label: {
                         HStack {
@@ -114,7 +127,7 @@ struct TodayView: View {
                     }
                     Card {
                         Label("Ein Impuls für heute", systemImage: "sparkles").foregroundStyle(Palette.lime).font(.headline)
-                        Text(Coaching.tip(profile: store.diary.profile, total: total)).padding(.top, 8)
+                        Text(LocalCoach.insight(store.diary, on: today)).padding(.top, 8)
                         Text("Allgemeine Orientierung, keine persönliche Ernährungsberatung.").font(.caption).foregroundStyle(.secondary).padding(.top, 8)
                     }
                 }.padding(20)

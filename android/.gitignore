@@ -1,0 +1,6 @@
+.toolchain/
+build/
+*.jks
+*.apk
+*.idsig
+node_modules/
