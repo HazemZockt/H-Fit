@@ -43,6 +43,16 @@ Bei einem roten Lauf entsteht keine verlässlich installierbare Datei. Den fehlg
 5. Barcode: **Lebensmittel selbst eingeben → Lebensmittel auswählen / ändern → Barcode scannen / eingeben**. Nach Übernahme Menge und Einheit prüfen.
 6. Unter **Bewegung** die Bewegungsdaten freigeben, um deine iPhone-Schritte zu sehen.
 7. Unter **Mein Plan → Eigene Rezepte & Mahlzeiten** häufige Gerichte speichern und später portionsweise erfassen.
+
+## 5. KI mit deinem Windows-PC verbinden
+
+1. Am PC `Start-HFit-KI.cmd` öffnen. Es startet den H-Fit-Dienst und das bereits installierte Ollama. Bei „KI bereit“ kannst du das Startfenster schließen; der Dienst bleibt im Hintergrund. Nach einem PC-Neustart erneut starten.
+2. PC und iPhone im selben WLAN lassen. Der PC muss für KI-Antworten eingeschaltet bleiben.
+3. Auf dem PC `companion/.local/pairing.html` öffnen. Die Seite enthält deinen privaten QR-Code; nicht teilen und nicht auf GitHub hochladen.
+4. In H-Fit unter **Assistent → PC verbinden → QR-Code scannen** koppeln. Kamera und lokales Netzwerk auf dem iPhone erlauben. Alternativ den Kopplungscode einfügen.
+5. Im Chat beispielsweise „Ich habe 60 g Haferflocken und 200 ml Milch gegessen“ schreiben. Unter **Mengen und Produkte prüfen** kontrollieren und ausdrücklich bestätigen. Fehlende Angaben werden nicht automatisch ergänzt.
+
+Die lokale Firewall-Regel wurde auf diesem PC für TCP 8787 und das lokale Subnetz eingerichtet. Keine Routerfreigabe erforderlich. Bei geänderter PC-IP ist eine neue Kopplung nötig. Verbindung und Regel können später entfernt werden; vorhandenes Ollama und Tagebuch müssen dafür nicht gelöscht werden.
 8. Ab und zu **Sicherung exportieren** nutzen, besonders vor einer Neuinstallation oder einem Gerätewechsel.
 9. Unter **Assistent** z. B. „Wie ist meine Bilanz heute?“ fragen. Die Antwort wird aus deinen Daten berechnet. Für beliebige KI-Beratung ist kein Modell verbunden.
 

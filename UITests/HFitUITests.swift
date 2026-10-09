@@ -35,6 +35,14 @@ final class HFitUITests: XCTestCase {
         app.buttons["Wie ist meine Bilanz heute?"].tap()
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Erfasst: 372 kcal")).firstMatch.waitForExistence(timeout: 5))
         attach(app, name: "Lokaler Assistent")
+        app.tabBars.buttons["Verlauf"].tap()
+        app.buttons["Monat"].tap()
+        XCTAssertTrue(app.buttons["Vorheriger Monat"].waitForExistence(timeout: 5))
+        let complete = app.switches["Tag vollständig erfasst"]
+        reveal(complete, in: app); complete.tap()
+        XCTAssertEqual(complete.value as? String, "1")
+        app.swipeDown(); app.swipeDown()
+        attach(app, name: "Monatsübersicht")
     }
     @MainActor private func reveal(_ element: XCUIElement, in app: XCUIApplication) {
         for _ in 0..<5 { if element.isHittable { return }; app.swipeUp() }

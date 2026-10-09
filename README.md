@@ -10,7 +10,8 @@ Eine native, deutschsprachige SwiftUI-App für iPhone 15 und andere iPhones ab i
 
 - Neu in 1.3: Einrichtung ohne Konto in drei Schritten auch auf dem iPhone: Name/Alter, Körperangaben/Formel, Ziel/Alltagsbewegung mit Planvorschau. Alte iPhone-Tagebücher bleiben erhalten und öffnen einmalig die Einrichtung.
 - Persönliche, abschaltbare Kalorien- und Makroschätzungen für Erwachsene, Tagesrest und Aktualisierung nach Gewichtseinträgen. Berechnung und Grenzen sind unter „Mein Plan“ erklärt.
-- Lokaler Assistent mit echten Tages-, Eiweiß-, Wasser-, Trainings- und Wochenauswertungen aus deinen Einträgen. Kein verbundenes Sprachmodell; Antworten sind Momentaufnahmen zum Fragezeitpunkt.
+- Lokaler Assistent mit berechneten Tages-, Eiweiß-, Wasser-, Trainings- und Wochenauswertungen. Auf dem iPhone optional echter KI-Chat über den eigenen Windows-PC mit Ollama. Einrichtung unter [companion/README.md](companion/README.md). Antworten sind Momentaufnahmen zum Fragezeitpunkt; Mahlzeiten werden erst nach Bestätigung gespeichert.
+- Neu in 1.4: Wochen-/Monatsumschaltung und Tagesringe als Zielbilanz für vollständig erfasste Tage. Keine Gesundheitsbewertung aus Kalorien allein.
 - Mahlzeiten auf Deutsch schreiben oder diktieren; vor dem Speichern Mengen und Zeitpunkt prüfen.
 - Lokale Erkennung von über 60 Grundnahrungsmitteln sowie eigenen Produkten, mit Gramm, Millilitern, Stückzahlen, Dezimalkomma, „gestern“ und Uhrzeiten.
 - Kalorien, Eiweiß, Kohlenhydrate und Fett automatisch aus den bestätigten Mengen berechnen.

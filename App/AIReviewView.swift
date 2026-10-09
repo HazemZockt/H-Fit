@@ -14,7 +14,8 @@ struct AIReviewView: View {
         self.response = response; self.completed = completed
         _date = State(initialValue: response.proposedDate())
         _items = State(initialValue: response.items.map { proposal in
-            let candidate = proposal.candidates.count == 1 ? proposal.candidates.first : nil
+            let first = proposal.candidates.count == 1 ? proposal.candidates.first : nil
+            let candidate = first.flatMap { proposal.unit == "piece" || proposal.unit == $0.unit ? $0 : nil }
             // Missing amounts remain zero/invalid, never an invented default portion.
             let amount = proposal.amount.map { proposal.unit == "piece" ? $0 * (candidate?.portion ?? 0) : $0 } ?? 0
             return DraftItem(id: UUID(), label: proposal.query, food: candidate, amount: amount,
@@ -43,9 +44,7 @@ struct AIReviewView: View {
                         }
                         if let food = items[index].food {
                             Text("\(Int(food.per100.kcal.rounded())) kcal / 100 \(food.unit)").font(.caption)
-                            Picker("Einheit laut Verpackung", selection: Binding(get: { items[index].food?.unit ?? "g" }, set: { items[index].food?.unit = $0 })) {
-                                Text("Gramm").tag("g"); Text("Milliliter").tag("ml")
-                            }
+                            Text("Menge in \(food.unit) eingeben. Gramm und Milliliter werden nicht automatisch gleichgesetzt.").font(.caption).foregroundStyle(.secondary)
                         } else { Text("Kein eindeutiges Produkt. Bitte auswählen oder mit Verpackungsangaben ergänzen.").foregroundStyle(.orange) }
                         TextField("Menge in g/ml (0 = fehlt)", value: $items[index].amount, format: .number).keyboardType(.decimalPad)
                         if items[index].estimated { Text("Stück-/Portionsgewicht oder Erkennung ist unsicher. Bitte abwiegen oder korrigieren.").font(.caption).foregroundStyle(.orange) }
@@ -74,6 +73,8 @@ struct AIReviewView: View {
         items[index].food = food
         if response.items[index].unit == "piece", let count = response.items[index].amount {
             items[index].amount = count * food.portion; items[index].estimated = true
+        } else if response.items[index].unit != food.unit {
+            items[index].amount = 0; items[index].estimated = true
         }
     }
 }
