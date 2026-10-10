@@ -4,7 +4,7 @@
 
 Eine native, deutschsprachige SwiftUI-App für iPhone 15 und andere iPhones ab iOS 17. Die Bedienung und Funktionen orientieren sich an einem klassischen Ernährungstagebuch wie YAZIO. Oberfläche, Code und enthaltene Grunddaten sind eigenständig; YAZIO-Code, dessen Produktdatenbank, Bilder und Rezepttexte werden nicht verwendet.
 
-**Status:** Quellcode und Build-Workflow sind vorbereitet. Noch keine kompilierte oder auf einem iPhone geprüfte Version. Auf diesem Windows-Rechner stehen Xcode und ein iOS-Simulator nicht zur Verfügung. Eine installierbare IPA entsteht erst nach einem erfolgreichen GitHub-Actions-Build. Die Gerätefunktionen brauchen anschließend einen Test auf deinem iPhone.
+**Status (10. Oktober 2026):** Version 1.4.0 erfolgreich auf GitHub gebaut. 26 Swift-Kerntests und der iPhone-Simulator-Test für Einrichtung, Tagesbilanz, Chat und Monatsansicht bestanden. `HFit-unsigned.ipa` liegt im Projektordner und im [erfolgreichen Build](https://github.com/HazemZockt/H-Fit/actions/runs/38040811574). Die Datei muss mit Sideloadly für dein iPhone signiert werden. Installation, KI-Verbindung und Gerätefunktionen auf einem echten iPhone sind noch nicht geprüft.
 
 ## Was im Code enthalten ist
 

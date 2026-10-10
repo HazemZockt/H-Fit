@@ -1,16 +1,19 @@
 # Prüfstatus
 
-Stand: 9. Oktober 2026. Entwicklungsumgebung: Windows.
+Stand: 10. Oktober 2026. Entwicklungsumgebung: Windows; iOS-Prüfung auf GitHub/macOS.
 
 ## Version 1.4 – aktueller Zusatz
 
+- iPhone-Release-Build erfolgreich. `HFit-unsigned.ipa` heruntergeladen und ZIP-Inhalt, Info.plist (Version 1.4.0, Build 5) sowie ARM64-Programm geprüft. Für die Installation ist die Signierung mit dem eigenen Apple-Account in Sideloadly erforderlich. Eine erfolgreiche Installation auf dem echten iPhone wird noch nicht behauptet.
+
 - Wochen-/Monatsumschaltung, Monatsnavigation und Tagesringe in Android und iOS ergänzt. Ringe vergleichen Kalorien (70 %) und Eiweiß (30 %) mit den Zieleinstellungen, keine Gesundheitsbewertung. Unvollständige Tage, fehlende Ziele und Minderjährige erhalten keine Bewertung. Vollständig-Markierungen werden lokal gespeichert und mit exportiert.
 - Android-APK Version 1.4-test (Versioncode 5) gebaut und Signaturen v2/v3 geprüft. 30 Logiktests und alle vier Browser-Testprogramme bestanden, einschließlich Monatswechsel, Ringanzeige, Speicherung/Neuladen, Rückkehr zur Woche und schmaler Darstellung. Native Android-Dienste sind in Browserprüfungen nachgebildet; kein Emulator-/Gerätetest.
-- iOS: neue Monatsansicht und zusätzlicher Kerntest vorbereitet; weiterhin kein erfolgreicher Xcode-Build und keine fertige IPA.
+- iOS: 26 Swift-Kerntests bestanden. App im iPhone-Simulator gestartet; Einrichtung (2670 kcal), 100 g Haferflocken (372 kcal), Rest (2298 kcal), lokale Chatbilanz, Monatsansicht und Vollständig-Schalter erfolgreich geprüft. Zwei vorherige Läufe scheiterten an nicht berücksichtigten deutschen Tausendertrennzeichen im Test sowie am Tippen auf die Mitte statt den Schalter. Die Wertprüfungen bleiben erhalten; Testbedienung wurde korrigiert. Aktueller Lauf: https://github.com/HazemZockt/H-Fit/actions/runs/38040811574
 - Lokale PC-KI mit Ollama, HTTPS, Kopplungsschlüssel und Zertifikatprüfung implementiert. iOS-Verbindung und Bestätigungsansicht für Mahlzeiten im Code ergänzt. Android verwendet weiterhin den lokalen regelbasierten Assistenten.
 - PC-KI wurde mit synthetischen Mahlzeiten und Rückfragen geprüft. Nährwerte werden aus Lebensmittel-Daten berechnet; Modellschätzungen werden nicht als Nährwertquelle übernommen. Freie KI-Antworten können weiterhin falsch sein.
 - WLAN-Freigabe eingerichtet und geprüft: TCP 8787, lokale PC-Adresse, ausschließlich LocalSubnet, auf den Python-Dienst beschränkt. Einrichtung über vorhandene PowerShell 7 mit Administratorrechten; keine Ausführungsrichtlinie geändert. GitHub CLI ist angemeldet, iOS-Build wird nun ausgeführt. Ein echter iPhone-Test steht noch aus.
-- Direkte Tagesbilanz-, Bedarfs-, Wochen- und Eiweißfragen verwenden auch bei verbundener KI die deterministische App-Berechnung. Freie KI-Antworten bleiben fehleranfällig. Zusätzliche Swift-Tests für Kopplung und Rechenrouting vorbereitet.
+- Direkte Tagesbilanz-, Bedarfs-, Wochen- und Eiweißfragen verwenden auch bei verbundener KI die deterministische App-Berechnung. Freie KI-Antworten bleiben fehleranfällig. Swift-Tests für Kopplung und Rechenrouting bestanden.
+- Noch offen: Installation auf einem echten iPhone, dortige WLAN-/KI-Verbindung, Kamera, Sprache und Bewegungssensor. PC-Dienst und verschlüsselte KI-Anfrage mit synthetischer Mahlzeit wurden geprüft; kein Test mit persönlichen Tagebuchdaten.
 
 Die folgenden Angaben dokumentieren den vorherigen Stand 1.3.
 
