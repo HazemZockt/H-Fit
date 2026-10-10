@@ -58,3 +58,17 @@ jobs:
           path: build/UIResults.xcresult
           if-no-files-found: ignore
           retention-days: 7
+      - name: Screenshots exportieren
+        if: always()
+        run: |
+          if [ -d build/UIResults.xcresult ]; then
+            xcrun xcresulttool export attachments --path build/UIResults.xcresult --output-path build/screenshots
+          fi
+      - name: Screenshots bereitstellen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: HFit-iOS-Screenshots
+          path: build/screenshots
+          if-no-files-found: ignore
+          retention-days: 7

@@ -20,7 +20,9 @@ final class HFitUITests: XCTestCase {
         attach(app, name: "Einrichtung mit berechnetem Plan")
         app.buttons["setup-next"].tap()
         XCTAssertTrue(app.staticTexts["Hey, Alex."].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Dein Richtwert: 2670 kcal"].exists)
+        let target = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Dein Richtwert:")).firstMatch
+        XCTAssertTrue(target.waitForExistence(timeout: 5))
+        XCTAssertEqual(target.label.filter(\.isNumber), "2670")
         app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Was hast du gegessen?")).firstMatch.tap()
         let editor = app.textViews["Deine Mahlzeit"]
         XCTAssertTrue(editor.waitForExistence(timeout: 5)); editor.tap(); editor.typeText("100 g Haferflocken")
@@ -29,7 +31,10 @@ final class HFitUITests: XCTestCase {
         let save = app.buttons["1 Einträge speichern"]
         reveal(save, in: app); save.tap()
         XCTAssertTrue(app.staticTexts["372"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Noch 2298 kcal offen"].exists)
+        let remaining = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Noch ")).firstMatch
+        XCTAssertTrue(remaining.waitForExistence(timeout: 5))
+        XCTAssertEqual(remaining.label.filter(\.isNumber), "2298")
+        XCTAssertTrue(remaining.label.hasSuffix("kcal offen"))
         attach(app, name: "Tagesbilanz")
         app.tabBars.buttons["Assistent"].tap()
         app.buttons["Wie ist meine Bilanz heute?"].tap()
@@ -39,8 +44,12 @@ final class HFitUITests: XCTestCase {
         app.buttons["Monat"].tap()
         XCTAssertTrue(app.buttons["Vorheriger Monat"].waitForExistence(timeout: 5))
         let complete = app.switches["Tag vollständig erfasst"]
-        reveal(complete, in: app); complete.tap()
-        XCTAssertEqual(complete.value as? String, "1")
+        reveal(complete, in: app)
+        XCTAssertTrue(complete.isEnabled)
+        // SwiftUI exposes the full label row as a switch. Tap the actual control at its trailing edge.
+        complete.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "1"), object: complete)
+        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 5), .completed)
         app.swipeDown(); app.swipeDown()
         attach(app, name: "Monatsübersicht")
     }
